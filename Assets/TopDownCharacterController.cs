@@ -45,6 +45,12 @@ public class TopDownCharacterController : MonoBehaviour
         RegenerateStamina(Time.deltaTime * staminaRegen); // Regenerate at a rate of 5 units per second
     }
 
+    public void ApplyRecoil(Vector2 direction, float strength)
+    {
+        // Apply recoil force in the opposite direction of firing
+        rb.AddForce(-direction.normalized * strength, ForceMode2D.Impulse);
+    }
+
     private void FixedUpdate()
     {
         if (!isDashing)

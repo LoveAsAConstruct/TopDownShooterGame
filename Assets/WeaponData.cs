@@ -9,7 +9,7 @@ public class WeaponData : ScriptableObject
     public float range;
     public int maxAmmo;
     public int bulletSpeed;
-
+    public float recoilStrength;
     public Sprite weaponSprite;
     public GameObject projectilePrefab; // Prefab for the projectile
     //public Transform firePoint; // Transform where projectiles are spawned

@@ -3,20 +3,23 @@ using UnityEngine;
 public class WeaponManager : MonoBehaviour
 {
     [Header("Weapons")]
-    public WeaponData startingWeapon; // The initial weapon the player starts with
-    private WeaponData currentWeaponData; // Reference to the currently equipped weapon data
-    private GameObject currentWeaponInstance; // Reference to the currently equipped weapon instance
+    public WeaponData startingWeapon;
+    private WeaponData currentWeaponData;
 
     [Header("References")]
-    public Transform firePoint; // Transform where projectiles are spawned
-    public LayerMask hitLayer; // Layer mask for raycasting hits (if using raycast-based weapons)
-    public Transform weaponRoot; // Transform representing the weapon's root (where the weapon pivots)
+    public Transform firePoint;
+    public Transform weaponRoot;
+    public SpriteRenderer weaponImage;
+
+    [Header("Weapon Throwing")]
+    public GameObject weaponPickupPrefab; // Assign your weapon pickup prefab in the inspector
+    public float throwForce = 500f;
 
     private bool isReloading = false;
+    private float fireTimer = 0; // Timer to control firing rate
 
     private void Start()
     {
-        // Equip the starting weapon when the game starts
         EquipWeapon(startingWeapon);
     }
 
@@ -24,35 +27,56 @@ public class WeaponManager : MonoBehaviour
     {
         if (!isReloading)
         {
-            // Rotate the weapon to point at the mouse
             RotateWeaponTowardsMouse();
 
-            // Handle shooting input
-            if (Input.GetMouseButtonDown(0))
+            // Firing logic
+            HandleFiring();
+
+            // Throwing logic
+            if (Input.GetKeyDown(KeyCode.T)) // Replace 'KeyCode.T' with your desired throw key
             {
-                Shoot();
+                ThrowWeapon();
             }
         }
     }
 
     private void RotateWeaponTowardsMouse()
     {
-        // Get the mouse position in world space
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePosition.z = 0f; // Ensure that the z-coordinate is the same as the character's position
-
-        // Calculate the direction from the weaponRoot to the mouse position
+        mousePosition.z = 0f;
         Vector3 directionToMouse = mousePosition - weaponRoot.position;
-
-        // Rotate the weaponRoot to look at the mouse---
         weaponRoot.right = directionToMouse.normalized;
+    }
+
+    private void HandleFiring()
+    {
+        if (currentWeaponData != null)
+        {
+            if (currentWeaponData.fireRate > 0 && Input.GetMouseButton(0) && fireTimer <= 0)
+            {
+                Shoot();
+                fireTimer = 1 / currentWeaponData.fireRate;
+            }
+            else if (currentWeaponData.fireRate < 0 && Input.GetMouseButtonDown(0) && fireTimer <= 0)
+            {
+                Shoot();
+                fireTimer = -1 / currentWeaponData.fireRate;
+            }
+
+            if (fireTimer > 0)
+            {
+                fireTimer -= Time.deltaTime;
+            }
+        }
     }
 
     public void Shoot()
     {
-        if (currentWeaponData != null)
+        if (currentWeaponData != null && currentWeaponData.maxAmmo > 0)
         {
-            currentWeaponData.Shoot(firePoint); // Pass the player's transform
+            currentWeaponData.Shoot(firePoint);
+            Vector2 recoilDirection = firePoint.right;
+            GetComponent<TopDownCharacterController>().ApplyRecoil(recoilDirection, currentWeaponData.recoilStrength);
         }
     }
 
@@ -60,22 +84,38 @@ public class WeaponManager : MonoBehaviour
     {
         if (weaponToEquip != null)
         {
-            // Destroy the currently equipped weapon instance (if any)
-            if (currentWeaponInstance != null)
+            weaponImage.sprite = weaponToEquip.weaponSprite;
+            if (currentWeaponData != null)
             {
-                Destroy(currentWeaponInstance);
+                Destroy(currentWeaponData);
             }
-
-            // Create an instance of the new weapon
-            //currentWeaponInstance = Instantiate(weaponToEquip.weaponPrefab, firePoint.position, Quaternion.identity);
-
-            // Set the current weapon data to the new weapon
             currentWeaponData = weaponToEquip;
-
-            // Parent the new weapon instance to the weaponRoot
-            //currentWeaponInstance.transform.parent = weaponRoot;
-            //currentWeaponInstance.transform.localPosition = Vector3.zero;
-            //currentWeaponInstance.transform.localRotation = Quaternion.identity;
         }
     }
+
+    private void ThrowWeapon()
+    {
+        if (currentWeaponData != null)
+        {
+            GameObject thrownWeapon = Instantiate(weaponPickupPrefab, firePoint.position, Quaternion.identity);
+
+            // Pass the currentWeaponData to the WeaponPickup script
+            WeaponPickup pickupScript = thrownWeapon.GetComponent<WeaponPickup>();
+            if (pickupScript != null)
+            {
+                pickupScript.weaponData = currentWeaponData;
+            }
+
+            Rigidbody2D rb = thrownWeapon.GetComponent<Rigidbody2D>();
+            Vector3 throwDirection = (Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position).normalized;
+            throwDirection.z = 0;
+            rb.AddForce(throwDirection * throwForce);
+            rb.angularVelocity = 720;
+
+            // Clear current weapon data and sprite
+            weaponImage.sprite = null;
+            currentWeaponData = null;
+        }
+    }
+
 }

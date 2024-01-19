@@ -24,11 +24,13 @@ public class WeaponPickup : MonoBehaviour
             }
         }
     }
-
-    private void OnTriggerEnter2D(Collider2D other)
+    
+    private void OnTriggerStay2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        print("colliderstay");
+        if (other.CompareTag("Player")  && Input.GetKeyDown(KeyCode.E))
         {
+            print("pickup");
             // If the player picks up this weapon, equip it using the cloned weaponData
             other.GetComponent<WeaponManager>().EquipWeapon(clonedWeaponData);
             Destroy(gameObject); // Remove the pickup object from the scene
