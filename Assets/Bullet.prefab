@@ -279,7 +279,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   trail: {fileID: 354305499533388171}
-  bounces: 1
+  bounces: 0
   bloodSplatterPrefab: {fileID: 7111207673781270742, guid: 4028ac92ddb874c0e87c918d86112538, type: 3}
 --- !u!114 &6355649418868203016
 MonoBehaviour:

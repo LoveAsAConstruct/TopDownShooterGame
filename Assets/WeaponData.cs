@@ -10,9 +10,10 @@ public class WeaponData : ScriptableObject
     public int maxAmmo;
     public int bulletSpeed;
     public float recoilStrength;
+    public float accuracySpread; // Combined property for accuracy and spread
+    public int bulletsPerShot; // Number of bullets fired per shot
     public Sprite weaponSprite;
-    public GameObject projectilePrefab; // Prefab for the projectile
-    //public Transform firePoint; // Transform where projectiles are spawned
+    public GameObject projectilePrefab;
 
     // Create a method for shooting using this weapon
     public void Shoot(Transform firePoint)
@@ -24,43 +25,46 @@ public class WeaponData : ScriptableObject
             return;
         }
 
-        // Check if it's a raycast-based weapon
-        if (bulletSpeed == 0)
+        for (int i = 0; i < bulletsPerShot; i++)
         {
-            // Perform a 2D raycast
-            RaycastHit2D hit = Physics2D.Raycast(firePoint.position, firePoint.right, range);
+            // Calculate a random angle for bullet spread based on accuracySpread
+            float randomSpreadAngle = Random.Range(-accuracySpread / 2f, accuracySpread / 2f);
+            Quaternion spreadRotation = Quaternion.Euler(0f, 0f, randomSpreadAngle);
 
-            if (hit.collider != null)
+            // Apply spread to the fire direction
+            Vector3 fireDirection = spreadRotation * firePoint.right;
+
+            if (bulletSpeed == 0) // Raycast-based weapon
             {
-                // Check if the ray hits an enemy or object with a health component
-                HealthComponent healthComponent = hit.collider.GetComponent<HealthComponent>();
-                if (healthComponent != null)
+                RaycastHit2D hit = Physics2D.Raycast(firePoint.position, fireDirection, range);
+                if (hit.collider != null)
                 {
-                    // Deal damage to the target
-                    healthComponent.TakeDamage(damage);
+                    HealthComponent healthComponent = hit.collider.GetComponent<HealthComponent>();
+                    if (healthComponent != null)
+                    {
+                        healthComponent.TakeDamage(damage);
+                    }
+                    // Add hit effects
                 }
-
-                // Add visual and audio effects for the hit (e.g., impact effects, gunshot sound)
             }
-        }
-        else // Projectile-based weapon
-        {
-            // Create and launch a projectile
-            GameObject projectile = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
-            Rigidbody2D rb = projectile.GetComponent<Rigidbody2D>();
-            rb.velocity = firePoint.right * bulletSpeed;
-
-            // Set the damage property of the projectile (if needed)
-            ProjectileScript projectileScript = projectile.GetComponent<ProjectileScript>();
-            if (projectileScript != null)
+            else // Projectile-based weapon
             {
-                projectileScript.SetDamage(damage);
+                GameObject projectile = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
+                Rigidbody2D rb = projectile.GetComponent<Rigidbody2D>();
+                Vector3 spreadVelocity = spreadRotation * (fireDirection * bulletSpeed);
+                rb.velocity = spreadVelocity;
+
+                ProjectileScript projectileScript = projectile.GetComponent<ProjectileScript>();
+                if (projectileScript != null)
+                {
+                    projectileScript.SetDamage(damage);
+                }
             }
         }
 
         // Reduce ammunition
-        maxAmmo--;
+        maxAmmo -= bulletsPerShot;
 
-        // Add additional shooting-related logic as needed
+        // Additional logic
     }
 }
