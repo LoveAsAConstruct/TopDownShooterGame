@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e052370734cd8564d841d0232c207f20, type: 3}
-  m_Name: AssaultRifle
+  m_Name: Shotgun
   m_EditorClassIdentifier: 
-  weaponName: Assault Rifle
-  damage: 17
-  fireRate: 15
+  weaponName: Shotgun
+  damage: 10
+  fireRate: -1
   range: 1000
-  maxAmmo: 30
+  maxAmmo: 50
   bulletSpeed: 100
-  bulletsFired: 0
-  bulletSpread: 5
-  recoilStrength: 1
-  weaponSprite: {fileID: 21300000, guid: 5d91c64e17fd246a58a283716ec67098, type: 3}
+  recoilStrength: 15
+  accuracySpread: 30
+  bulletsPerShot: 10
+  weaponSprite: {fileID: 21300000, guid: 6127792109ff35246aa609939c13b5ac, type: 3}
   projectilePrefab: {fileID: 1219235772640998311, guid: 983b60b3ea50d2743bf0e1c4eec99572, type: 3}
