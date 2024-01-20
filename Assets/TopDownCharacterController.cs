@@ -24,6 +24,17 @@ public class TopDownCharacterController : MonoBehaviour
     private float maxStamina = 100f;
     private float currentStamina;
 
+    // For bloody footprints
+    public GameObject leftFootprintPrefab;  // Assign in Unity Editor
+    public GameObject rightFootprintPrefab; // Assign in Unity Editor
+    private float lastTimeOnBlood;          // Time when last stepped on blood
+    private bool isLeavingFootprints = false;
+    private bool isLeftFoot = true;         // To alternate between left and right foot
+    private float footprintSpacing = 0.75f;  // Space between footprints
+    private Vector2 lastFootprintPosition;
+    private const float footprintDuration = 5f; // Duration to leave footprints after leaving blood
+
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -43,12 +54,15 @@ public class TopDownCharacterController : MonoBehaviour
 
         // Optional: Regenerate stamina over time
         RegenerateStamina(Time.deltaTime * staminaRegen); // Regenerate at a rate of 5 units per second
-    }
 
-    public void ApplyRecoil(Vector2 direction, float strength)
-    {
-        // Apply recoil force in the opposite direction of firing
-        rb.AddForce(-direction.normalized * strength, ForceMode2D.Impulse);
+        if (isLeavingFootprints && Time.time <= lastTimeOnBlood + footprintDuration)
+        {
+            TryPlaceFootprint();
+        }
+        else if (Time.time > lastTimeOnBlood + footprintDuration)
+        {
+            isLeavingFootprints = false;
+        }
     }
 
     private void FixedUpdate()
@@ -74,7 +88,6 @@ public class TopDownCharacterController : MonoBehaviour
         }
         else
         {
-            // Apply a friction-like effect for stopping quickly
             rb.velocity = Vector2.MoveTowards(rb.velocity, Vector2.zero, stopSpeed * Time.fixedDeltaTime);
         }
     }
@@ -85,10 +98,7 @@ public class TopDownCharacterController : MonoBehaviour
         float startTime = Time.time;
         Vector2 initialDashDirection = moveDirection.normalized;
 
-        // Sprite and Particle Effects
-        //characterSprite.sprite = dashSprite;
         dashEffect.Play();
-        //dashSound.Play();
 
         while (Time.time < startTime + dashDuration)
         {
@@ -96,8 +106,11 @@ public class TopDownCharacterController : MonoBehaviour
             yield return null;
         }
 
-        // Revert to normal sprite
-        //characterSprite.sprite = /* your normal sprite */;
+        if (isLeavingFootprints)
+        {
+            lastTimeOnBlood = Mathf.Max(lastTimeOnBlood, Time.time - 3f); // Reduce the footprint time by 3 seconds
+        }
+
         isDashing = false;
         lastDashTime = Time.time;
     }
@@ -123,5 +136,51 @@ public class TopDownCharacterController : MonoBehaviour
         {
             staminaSlider.value = currentStamina / maxStamina;
         }
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("BloodSurface"))
+        {
+            isLeavingFootprints = true;
+            lastFootprintPosition = transform.position;
+            lastTimeOnBlood = Time.time;
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("BloodSurface"))
+        {
+            lastTimeOnBlood = Time.time;
+        }
+    }
+
+    private void TryPlaceFootprint()
+    {
+        if (Vector2.Distance(transform.position, lastFootprintPosition) >= footprintSpacing)
+        {
+            PlaceFootprint();
+            lastFootprintPosition = transform.position;
+        }
+    }
+
+    private void PlaceFootprint()
+    {
+        GameObject footprintPrefab = isLeftFoot ? leftFootprintPrefab : rightFootprintPrefab;
+        Quaternion footprintRotation = Quaternion.Euler(0, 0, Vector2.SignedAngle(Vector2.up, moveDirection));
+
+        // Calculate the offset position for left and right footprints
+        Vector2 offset = (isLeftFoot ? Vector2.Perpendicular(rb.velocity).normalized : -Vector2.Perpendicular(rb.velocity).normalized) * 0.3f;
+        Vector2 footprintPosition = (Vector2)transform.position + offset;
+
+        Instantiate(footprintPrefab, footprintPosition, footprintRotation);
+        isLeftFoot = !isLeftFoot;
+    }
+
+    public void ApplyRecoil(Vector2 direction, float strength)
+    {
+        // Apply recoil force in the opposite direction of firing
+        rb.AddForce(direction * strength, ForceMode2D.Impulse);
     }
 }

@@ -2,38 +2,50 @@ using UnityEngine;
 
 public class WeaponPickup : MonoBehaviour
 {
-    public WeaponData weaponData; // Reference to the original weapon data (asset)
-    private WeaponData clonedWeaponData; // Reference to the cloned weapon data
-    private SpriteRenderer spriteRenderer; // Reference to the SpriteRenderer component
+    public WeaponData weaponData;
+    private WeaponData clonedWeaponData;
+    private SpriteRenderer spriteRenderer;
+
+    private bool playerInTrigger = false; // Flag to indicate player is in trigger area
 
     private void Start()
     {
-        // Get a reference to the SpriteRenderer component
         spriteRenderer = GetComponent<SpriteRenderer>();
-
-        // Clone the weaponData to create a unique instance
         clonedWeaponData = Instantiate(weaponData);
 
-        // Check if a valid weaponData is assigned
-        if (clonedWeaponData != null)
+        if (clonedWeaponData != null && spriteRenderer != null)
         {
-            // Set the sprite of the pickup to the sprite from the cloned weaponData
-            if (spriteRenderer != null)
+            spriteRenderer.sprite = clonedWeaponData.weaponSprite;
+        }
+    }
+
+    private void Update()
+    {
+        if (playerInTrigger && Input.GetKeyDown(KeyCode.E))
+        {
+            // Implement pickup logic here
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
             {
-                spriteRenderer.sprite = clonedWeaponData.weaponSprite;
+                player.GetComponent<WeaponManager>().EquipWeapon(clonedWeaponData);
+                Destroy(gameObject);
             }
         }
     }
-    
-    private void OnTriggerStay2D(Collider2D other)
+
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        print("colliderstay");
-        if (other.CompareTag("Player")  && Input.GetKeyDown(KeyCode.E))
+        if (other.CompareTag("Player"))
         {
-            print("pickup");
-            // If the player picks up this weapon, equip it using the cloned weaponData
-            other.GetComponent<WeaponManager>().EquipWeapon(clonedWeaponData);
-            Destroy(gameObject); // Remove the pickup object from the scene
+            playerInTrigger = true;
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            playerInTrigger = false;
         }
     }
 }

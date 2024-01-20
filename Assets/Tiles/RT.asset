@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
-  m_Name: LeftTile
+  m_Name: RT
   m_EditorClassIdentifier: 
-  m_DefaultSprite: {fileID: -1149803016, guid: e9ea18bef7d2fc74a9d994c48cc9bfee, type: 3}
-  m_DefaultGameObject: {fileID: 144913555396150389, guid: be2bd31f4c96042daaebaffbbf5d7467, type: 3}
+  m_DefaultSprite: {fileID: -61364592, guid: e9ea18bef7d2fc74a9d994c48cc9bfee, type: 3}
+  m_DefaultGameObject: {fileID: 7420844713981023736, guid: e10ddbbb831d849c98b84b20c782a93d, type: 3}
   m_DefaultColliderType: 1
   m_TilingRules: []

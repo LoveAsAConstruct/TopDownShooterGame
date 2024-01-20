@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: BottomTile
   m_EditorClassIdentifier: 
   m_DefaultSprite: {fileID: 420607902, guid: e9ea18bef7d2fc74a9d994c48cc9bfee, type: 3}
-  m_DefaultGameObject: {fileID: 7420844713981023736, guid: e10ddbbb831d849c98b84b20c782a93d, type: 3}
+  m_DefaultGameObject: {fileID: 5320216132598210360, guid: 2bc56b3a877274f398586db20b8d04fe, type: 3}
   m_DefaultColliderType: 1
   m_TilingRules: []
