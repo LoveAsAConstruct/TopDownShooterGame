@@ -1,4 +1,5 @@
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
 
 [CustomEditor(typeof(WeaponData))]
@@ -86,3 +87,4 @@ public class WeaponDataEditor : Editor
         EditorGUILayout.PropertyField(muzzlePositionProp);
     }
 }
+#endif

@@ -1,6 +1,6 @@
 using UnityEngine;
-
-public class WeaponManager : MonoBehaviour
+using Mirror;
+public class WeaponManager : NetworkBehaviour
 {
     [Header("Weapons")]
     public WeaponData startingWeapon;
@@ -39,7 +39,17 @@ public class WeaponManager : MonoBehaviour
             }
         }
     }
-
+    [Command]
+    public void CmdPickupWeapon(GameObject weaponPickup)
+    {
+        WeaponPickup pickup = weaponPickup.GetComponent<WeaponPickup>();
+        if (pickup != null)
+        {
+            EquipWeapon(pickup.weaponData);
+            NetworkServer.Destroy(weaponPickup);
+            print("picked up");
+        }
+    }
     private void RotateWeaponTowardsMouse()
     {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -95,27 +105,44 @@ public class WeaponManager : MonoBehaviour
 
     private void ThrowWeapon()
     {
-        if (currentWeaponData != null)
-        {
-            GameObject thrownWeapon = Instantiate(weaponPickupPrefab, firePoint.position, Quaternion.identity);
+        if (!isLocalPlayer || currentWeaponData == null)
+            return;
 
-            // Pass the currentWeaponData to the WeaponPickup script
-            WeaponPickup pickupScript = thrownWeapon.GetComponent<WeaponPickup>();
-            if (pickupScript != null)
-            {
-                pickupScript.weaponData = currentWeaponData;
-            }
-
-            Rigidbody2D rb = thrownWeapon.GetComponent<Rigidbody2D>();
-            Vector3 throwDirection = (Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position).normalized;
-            throwDirection.z = 0;
-            rb.AddForce(throwDirection * throwForce);
-            rb.angularVelocity = 720;
-
-            // Clear current weapon data and sprite
-            weaponImage.sprite = null;
-            currentWeaponData = null;
-        }
+        CmdThrowWeapon(firePoint.position, CalculateThrowDirection());
     }
+
+    [Command]
+    private void CmdThrowWeapon(Vector3 position, Vector3 direction)
+    {
+        GameObject thrownWeapon = Instantiate(weaponPickupPrefab, position, Quaternion.identity);
+        NetworkServer.Spawn(thrownWeapon, connectionToClient); // Spawning with player's authority
+
+        WeaponPickup pickupScript = thrownWeapon.GetComponent<WeaponPickup>();
+        if (pickupScript != null)
+        {
+            pickupScript.weaponData = currentWeaponData;
+        }
+
+        Rigidbody2D rb = thrownWeapon.GetComponent<Rigidbody2D>();
+        rb.AddForce(direction * throwForce);
+        rb.angularVelocity = 720;
+
+        RpcClearCurrentWeaponData();
+    }
+
+    [ClientRpc]
+    private void RpcClearCurrentWeaponData()
+    {
+        weaponImage.sprite = null;
+        currentWeaponData = null;
+    }
+
+    private Vector3 CalculateThrowDirection()
+    {
+        Vector3 throwDirection = (Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position).normalized;
+        throwDirection.z = 0;
+        return throwDirection;
+    }
+
 
 }
