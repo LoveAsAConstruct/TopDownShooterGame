@@ -181,6 +181,6 @@ public class TopDownCharacterController : MonoBehaviour
     public void ApplyRecoil(Vector2 direction, float strength)
     {
         // Apply recoil force in the opposite direction of firing
-        rb.AddForce(direction * strength, ForceMode2D.Impulse);
+        rb.AddForce(-direction * strength, ForceMode2D.Impulse);
     }
 }
